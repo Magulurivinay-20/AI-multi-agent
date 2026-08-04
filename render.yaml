@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ai-multi-agent-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    startCommand: java -jar /app/app.jar
+
+  - type: web
+    name: ai-multi-agent-frontend
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    startCommand: nginx -g "daemon off;"

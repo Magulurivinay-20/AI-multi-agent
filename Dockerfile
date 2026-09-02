@@ -1,10 +1,16 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-COPY .npmrc ./
+RUN npm ci --silent
+COPY index.html ./
+COPY vite.config.js ./
+COPY postcss.config.js ./
+COPY tailwind.config.js* ./
 COPY src ./src
 COPY public ./public
-RUN npm ci --silent
+# VITE_API_URL is injected at build time via --build-arg
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 FROM nginx:stable-alpine

@@ -13,6 +13,7 @@ import ChatPage         from './pages/ChatPage'
 import AnalyticsPage    from './pages/AnalyticsPage'
 import ToolsPage        from './pages/ToolsPage'
 import SettingsPage     from './pages/SettingsPage'
+import API_BASE         from '../../utils/api'
 
 import { Plus, Play, MessageSquare, FolderOpen } from 'lucide-react'
 
@@ -35,11 +36,11 @@ const [agentCount, setAgentCount] = useState(0)
 const [workflowCount, setWorkflowCount] = useState(0)
 
   useEffect(() => {
-  fetch("http://localhost:9090/api/agents/count")
+  fetch(`${API_BASE}/api/agents/count`)
     .then(r => r.text())
     .then(setAgentCount)
 
-  fetch("http://localhost:9090/api/workflows/count")
+  fetch(`${API_BASE}/api/workflows/count`)
     .then(r => r.text())
     .then(setWorkflowCount)
 }, [])

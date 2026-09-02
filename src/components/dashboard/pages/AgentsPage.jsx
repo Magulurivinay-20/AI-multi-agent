@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Search, MoreVertical, Play, Pause, Trash2, Edit3, Bot } from 'lucide-react'
+import API_BASE from '../../../utils/api'
 const INITIAL_AGENTS = [
   { id: 1, initial: 'R', name: 'ResearchAgent',  role: 'Researcher',       status: 'Active', color: '#1E6FFF', tasks: 42, model: 'GPT-4o',       created: 'Jun 1, 2026'  },
   { id: 2, initial: 'W', name: 'WriterAgent',    role: 'Content Writer',   status: 'Active', color: '#22CC88', tasks: 38, model: 'GPT-4o',       created: 'Jun 3, 2026'  },
@@ -118,7 +119,7 @@ const [form, setForm] = useState({ name:'', role:'Researcher', model:'claude-son
 const [errors, setErrors] = useState({})
 const [selectedAgent, setSelectedAgent] = useState(null)
 useEffect(() => {
-  fetch("http://localhost:9090/api/agents")
+  fetch(`${API_BASE}/api/agents`)
     .then(res => res.json())
     .then(data => {
       const formatted = data.map(a => ({
@@ -188,8 +189,8 @@ const handleSave = () => {
     return
 
   const url = editingAgent
-  ? `http://localhost:9090/api/agents/${editingAgent.id}`
-  : "http://localhost:9090/api/agents"
+  ? `${API_BASE}/api/agents/${editingAgent.id}`
+  : `${API_BASE}/api/agents`
 
 const method = editingAgent ? "PUT" : "POST"
 
@@ -539,7 +540,7 @@ const del = (id) => {
 
         <button
           onClick={() => {
-             fetch(`http://localhost:9090/api/agents/${deleteAgentId}`, {
+             fetch(`${API_BASE}/api/agents/${deleteAgentId}`, {
     method: "DELETE"
   })
   .then(() => {

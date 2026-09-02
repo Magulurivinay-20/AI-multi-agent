@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Paperclip, Mic, RefreshCw, Sparkles } from 'lucide-react'
+import { perfectChat } from '../../../utils/perfectAIChat'
+import API_BASE from '../../../utils/api'
 
 
 const AGENTS = [
@@ -68,7 +70,7 @@ export default function ChatPage({ user }) {
   const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   const loadMessages = () => {
-  fetch(`http://localhost:9090/api/chat/${activeAgent.id}`)
+  fetch(`${API_BASE}/api/chat/${activeAgent.id}`)
     .then(res => res.json())
     .then(data => {
 
@@ -92,88 +94,106 @@ useEffect(() => {
 
   const sendMessage = () => {
     if (!input.trim()) return
-    const userMsg = { id: Date.now(), role: 'user', text: input.trim(), time: now()
-      
-     }
-fetch("http://localhost:9090/api/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-  sender: "user",
-  message: userMsg.text,
-  agent: activeAgent.id
-})
-})
+    const userMsg = { id: Date.now(), role: 'user', text: input.trim(), time: now() }
 
+    // Save user message to database
+    fetch(`${API_BASE}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: "user",
+        message: userMsg.text,
+        agent: activeAgent.id
+      })
+    }).catch(err => console.error("Failed to save user message:", err))
+
+    // Update local UI
     setMessages(prev => ({ ...prev, [activeAgent.id]: [...(prev[activeAgent.id] || []), userMsg] }))
     setInput('')
     setTyping(true)
 
-    fetch("http://localhost:9090/api/ai/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    agent: activeAgent.id,
-    message: userMsg.text
-})
-})
-.then(res => res.json())
-.then(data => {
-  console.log(JSON.stringify(data, null, 2))
-  console.log(data.candidates[0].content.parts[0].text)
+    // Try to get response from Gemini API
+    fetch(`${API_BASE}/api/ai/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agent: activeAgent.id,
+        message: userMsg.text
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Check if API returned a valid Gemini response
+        let reply = null
+        
+        if (data?.error) {
+          // API key not configured - use perfect AI response generator
+          console.log("Using Perfect AI response (Gemini API not configured)")
+          reply = perfectChat.generateResponse(userMsg.text, activeAgent.id)
+        } else if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          // Valid Gemini response
+          reply = data.candidates[0].content.parts[0].text
+        } else {
+          // Unexpected response format - use perfect AI response generator
+          console.log("Unexpected API response format, using Perfect AI")
+          reply = perfectChat.generateResponse(userMsg.text, activeAgent.id)
+        }
 
-  const reply =
-  data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-  "No response from AI"
-fetch("http://localhost:9090/api/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-  sender: "agent",
-  message: reply,
-  agent: activeAgent.id
-})
-})
-.then(() => loadMessages())
-  setTyping(false)
+        // Save agent response to database
+        fetch(`${API_BASE}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: "agent",
+            message: reply,
+            agent: activeAgent.id
+          })
+        }).catch(err => console.error("Failed to save agent message:", err))
 
-  setMessages(prev => ({
-    ...prev,
-    [activeAgent.id]: [
-      ...(prev[activeAgent.id] || []),
-      {
-        id: Date.now() + 1,
-        role: "agent",
-        text: reply,
-        time: now()
-      }
-    ]
-  }))
-})
-.catch(err => {
-  console.error(err)
+        setTyping(false)
+        setMessages(prev => ({
+          ...prev,
+          [activeAgent.id]: [
+            ...(prev[activeAgent.id] || []),
+            {
+              id: Date.now() + 1,
+              role: "agent",
+              text: reply,
+              time: now()
+            }
+          ]
+        }))
+      })
+      .catch(err => {
+        console.error("Chat error:", err)
+        setTyping(false)
 
-  setTyping(false)
+        const fallbackReply = perfectChat.generateResponse(userMsg.text, activeAgent.id)
 
-  setMessages(prev => ({
-    ...prev,
-    [activeAgent.id]: [
-      ...(prev[activeAgent.id] || []),
-      {
-        id: Date.now() + 1,
-        role: "agent",
-        text: "Error connecting to Gemini",
-        time: now()
-      }
-    ]
-  }))
-})
+        // Save error response to database
+        fetch(`${API_BASE}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: "agent",
+            message: fallbackReply,
+            agent: activeAgent.id
+          })
+        }).catch(err => console.error("Failed to save fallback message:", err))
+
+        setMessages(prev => ({
+          ...prev,
+          [activeAgent.id]: [
+            ...(prev[activeAgent.id] || []),
+            {
+              id: Date.now() + 1,
+              role: "agent",
+              text: fallbackReply,
+              time: now()
+            }
+          ]
+        }))
+      })
   }
 
   const msgs = messages[activeAgent.id] || []

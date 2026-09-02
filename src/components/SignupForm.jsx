@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import PasswordStrengthBar from './PasswordStrengthBar'
+import API_BASE from '../utils/api'
 
 export default function SignupForm({ onSignup, onSwitchTab, userStore }) {
   const [form, setForm] = useState({
@@ -49,7 +50,7 @@ export default function SignupForm({ onSignup, onSwitchTab, userStore }) {
 
     setLoading(true)
 
-fetch("http://localhost:9090/api/users/signup", {
+fetch(`${API_BASE}/api/users/signup`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json"

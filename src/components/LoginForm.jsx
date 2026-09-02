@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import API_BASE from '../utils/api'
 
 export default function LoginForm({ onLogin, onSwitchTab, userStore }) {
   const [username, setUsername] = useState('')
@@ -18,7 +19,7 @@ export default function LoginForm({ onLogin, onSwitchTab, userStore }) {
 
     // Look up user in the in-memory store
     
-fetch("http://localhost:9090/api/users/login", {
+fetch(`${API_BASE}/api/users/login`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json"

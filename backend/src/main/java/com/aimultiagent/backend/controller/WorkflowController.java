@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/workflows")
-@CrossOrigin(origins = "http://localhost:5173")
 public class WorkflowController {
 
     private final WorkflowRepository repo;

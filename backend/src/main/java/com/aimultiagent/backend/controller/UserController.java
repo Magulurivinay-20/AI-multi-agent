@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
     @Autowired
@@ -27,7 +26,7 @@ public ResponseEntity<?> login(@RequestBody User loginUser) {
         return ResponseEntity.ok(user);
     }
 
-    return ResponseEntity.status(401).body("Invalid credentials");
+    return ResponseEntity.status(401).body(new ErrorResponse("Invalid credentials", 401));
 }
  @GetMapping("/count")
 public long countUsers() {

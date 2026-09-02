@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import API_BASE from '../../../utils/api'
 
 const taskData = [
   { day: 'Mon', completed: 18, failed: 2 },
@@ -66,19 +67,19 @@ const [chatCount, setChatCount] = useState(0)
 
 useEffect(() => {
 
-  fetch("http://localhost:9090/api/users/count")
+  fetch(`${API_BASE}/api/users/count`)
     .then(r => r.text())
     .then(setUserCount)
 
-  fetch("http://localhost:9090/api/agents/count")
+  fetch(`${API_BASE}/api/agents/count`)
     .then(r => r.text())
     .then(setAgentCount)
 
-  fetch("http://localhost:9090/api/workflows/count")
+  fetch(`${API_BASE}/api/workflows/count`)
     .then(r => r.text())
     .then(setWorkflowCount)
 
-  fetch("http://localhost:9090/api/chat/count")
+  fetch(`${API_BASE}/api/chat/count`)
     .then(r => r.text())
     .then(setChatCount)
 
@@ -96,7 +97,7 @@ useEffect(() => {
 
 <button
   onClick={() => {
-    fetch("http://localhost:9090/api/chat/clear", {
+    fetch(`${API_BASE}/api/chat/clear`, {
       method: "DELETE"
     })
     .then(() => window.location.reload())

@@ -8,14 +8,17 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AIController {
 
-    @Value("${gemini.api.key}")
+    @Value("${gemini.api.key:}")
     private String apiKey;
 
     @PostMapping("/chat")
 public String chat(@RequestBody Map<String, String> body) {
+
+    if (apiKey == null || apiKey.isBlank()) {
+        return "{\"error\":\"Gemini API key is not configured\"}";
+    }
 
     String userPrompt = body.get("message");
     String agent = body.getOrDefault("agent", "research");

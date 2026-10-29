@@ -11,7 +11,7 @@ docker-compose build
 docker-compose up -d
 ```
 
-Frontend will be available at http://localhost and backend at http://localhost:8080
+Frontend will be available at http://localhost and backend at http://localhost:9090
 
 Render (recommended)
 

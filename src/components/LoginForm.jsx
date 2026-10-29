@@ -8,7 +8,7 @@ export default function LoginForm({ onLogin, onSwitchTab, userStore }) {
   const [loading, setLoading]   = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -17,40 +17,40 @@ export default function LoginForm({ onLogin, onSwitchTab, userStore }) {
       return
     }
 
-    // Look up user in the in-memory store
-    
-fetch(`${API_BASE}/api/users/login`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    email: username,
-    password: password
-  })
-})
-.then(async res => {
-  const text = await res.text()
+    setLoading(true)
 
-  if (!text) {
-    setLoading(false)
-    triggerError("Incorrect username or password.")
-    return null
-  }
+    try {
+      const response = await fetch(`${API_BASE}/api/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username.trim(), password }),
+      })
+      const data = await response.json().catch(() => null)
 
-  return JSON.parse(text)
-})
-.then(data => {
-  if (!data) return
+      if (response.status === 401) {
+        triggerError('Incorrect username or password.')
+        return
+      }
 
-  setLoading(false)
-  onLogin(data)
-})
-.catch(err => {
-  console.error(err)
-  setLoading(false)
-  triggerError("Server error.")
-})
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to sign in right now.')
+      }
+
+      if (!data) {
+        throw new Error('The server returned an invalid response.')
+      }
+
+      onLogin(data)
+    } catch (err) {
+      console.error('Login request failed:', err)
+      triggerError(
+        err instanceof TypeError
+          ? 'Cannot reach the server. Make sure the backend is running on port 9090.'
+          : err.message || 'Unable to sign in right now.'
+      )
+    } finally {
+      setLoading(false)
+    }
 
   }
 
